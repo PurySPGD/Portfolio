@@ -1,0 +1,152 @@
+void Check_Combo()
+        {
+            Debug.Log("Check_Combo");
+
+            Tests = FindObjectOfType<Tests>();
+            Combo_Deck = FindObjectOfType<Combo_Deck>();
+            BattleSystem = FindObjectOfType<BattleSystem>();
+            List<Tests.Value_For_Calculations> List_Of_Left_Values = new List<Tests.Value_For_Calculations> { };
+            List<Tests.Value_For_Calculations> List_Of_Right_Values = new List<Tests.Value_For_Calculations> { };
+
+            Combo_true = true;
+
+
+            // Sprawdzenie, czy wszystkie sloty są w użyciu
+            foreach (var Slot in List_Of_Dice_Slots_All)
+            {
+                if (Slot.Current_Dice_In_Slot == null)
+                {
+                    Combo_true = false;
+                    return;
+                }
+            }
+            // Sprawdzenie czy Gracz spełnia koszty
+            foreach (var Cost in Costs)
+            {                
+                if (Cost.Static_Value > Tests.Find_Numeric_Value(Cost.Reward_Type))
+                {
+                    Combo_true = false;
+                    return;
+                }
+                
+            }
+
+
+            // Podłączenie Slotów lewej strony równania
+            foreach (var Slot in List_Of_Dice_Slots_All)
+            {
+                foreach (var Parameter in Left_Parameters)
+                {
+                    if (Parameter.ID == Slot.Slot_ID && Parameter.Value_Used == Values_Used.Dice_Slot)
+                    {
+                        List_Of_Left_Values.Add(new Tests.Value_For_Calculations { Value = Slot.Die_Value, ID = Slot.Slot_ID });
+                    }
+                }
+            }
+            //Określenie Static Value oraz Conected Stat po lewej stronie równania
+            foreach (var Parameter in Left_Parameters)
+            {
+                if (Parameter.Value_Used == Values_Used.Static_Value)
+                {
+                    List_Of_Left_Values.Add(new Tests.Value_For_Calculations { Value = Parameter.Static_Value, ID = Parameter.ID });
+                }
+                else if (Parameter.Value_Used == Values_Used.Conected_Stat)
+                {
+                    List_Of_Left_Values.Add(new Tests.Value_For_Calculations { Value = Tests.Find_Numeric_Value(Parameter.Conected_Stat), ID = Parameter.ID });
+                }
+            }
+
+
+
+            // Obliczenie lewej strony równania
+            int Calculated_Left_Value = Tests.Calculate(List_Of_Left_Values, Left_Mathematical_Operation, null);
+
+
+            // Podłączenie Slotów Prawej strony równania
+            foreach (var Slot in List_Of_Dice_Slots_All)
+            {
+                foreach (var Parameter in Right_Parameters)
+                {
+                    if (Parameter.ID == Slot.Slot_ID && Parameter.Value_Used == Values_Used.Dice_Slot)
+                    {
+                        List_Of_Right_Values.Add(new Tests.Value_For_Calculations { Value = Slot.Die_Value, ID = Slot.Slot_ID });
+                    }
+                }
+            }
+            //Określenie Static Value oraz Conected Stat po prawej stronie równania
+            foreach (var Parameter in Right_Parameters)
+            {
+                if (Parameter.Value_Used == Values_Used.Static_Value)
+                {
+                    List_Of_Right_Values.Add(new Tests.Value_For_Calculations { Value = Parameter.Static_Value, ID = Parameter.ID });
+                }
+                else if (Parameter.Value_Used == Values_Used.Conected_Stat)
+                {
+                    List_Of_Right_Values.Add(new Tests.Value_For_Calculations { Value = Tests.Find_Numeric_Value(Parameter.Conected_Stat), ID = Parameter.ID });
+                }
+            }
+
+
+
+            // Obliczenie prawej strony równania
+            int Calculated_Right_Value = Tests.Calculate(List_Of_Right_Values, Right_Mathematical_Operation, null);
+
+            // Sprawdzenie czy Równanie jest prawdziwe
+            if (Tests.Check_Conditions(Condition,Calculated_Left_Value,Calculated_Right_Value) == false)
+            {
+                Debug.LogError("C");
+                Combo_true = false;
+                return;
+            }
+
+
+
+
+            // Obliczenie i pokazanie bonusów oraz pokazanie kosztów
+            List<Tests.Value_For_Calculations> List_Of_Values = new List<Tests.Value_For_Calculations> { };
+
+
+
+            foreach (var Reward in Rewards)
+            {
+                List_Of_Values = new List<Tests.Value_For_Calculations> { };
+
+                foreach (var Slot in List_Of_Dice_Slots_All)
+                {
+                    if (Reward.ID == Slot.Slot_ID && Reward.ID != Alphabet.Not_Conected)
+                    {
+                        List_Of_Values.Add(new Tests.Value_For_Calculations { Value = Slot.Die_Value, ID = Slot.Slot_ID });
+                    }
+                }
+
+                int Calculated_Reward = Tests.Calculate(List_Of_Values, Reward.Mathematical_Operation, Reward.Conected_Value) + Reward.Static_Value; ;
+
+                Tests.Apply_Reward_(Reward.Reward_Type,Calculated_Reward,0,0,0,A_B_C.None,null,Mathematical_Operations.None);
+            }
+
+
+
+            List_Of_Values = new List<Tests.Value_For_Calculations> { };
+
+            foreach (var Cost in Costs)
+            {
+                List_Of_Values = new List<Tests.Value_For_Calculations> { };
+
+                if (Cost.Subtract_Cost == true)
+                {
+                    foreach (var Slot in List_Of_Dice_Slots_All)
+                    {
+                        if (Cost.ID == Slot.Slot_ID && Cost.ID != Alphabet.Not_Conected)
+                        {
+
+                            List_Of_Values.Add(new Tests.Value_For_Calculations { Value = -Slot.Die_Value, ID = Slot.Slot_ID });
+                        }
+                    }
+
+                    int Calculated_Cost = -Tests.Calculate(List_Of_Values, Cost.Mathematical_Operation, Cost.Conected_Value) - Cost.Static_Value; ;
+
+                    Tests.Apply_Reward_(Cost.Reward_Type, Calculated_Cost, 0, 0, 0, A_B_C.None, null, Mathematical_Operations.None);
+                }
+            }
+          
+        }
