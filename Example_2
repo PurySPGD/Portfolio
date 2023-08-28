@@ -1,0 +1,68 @@
+public void Change_Cogs_Speed(float Value)
+    {
+        Debug.Log("Change_Cogs_Speed");
+
+        if (Saved_Value != Value)
+        {
+            float Rotation_Mod = Value * 2;
+
+
+            foreach (var Cog in Hero_Interface_Cogs)
+            {
+                if (Cog.Reversed_Spin == false)
+                {
+                    Cog.Target_Spin_Mod = Rotation_Mod;
+                }
+                else
+                {
+                    Cog.Target_Spin_Mod = -Rotation_Mod;
+                }
+
+                if (Cog.Changing_Speed == false)
+                {
+                    if (Cog.Reversed_Spin == false)
+                    {
+                        StartCoroutine(Cog.Change_Speed(Rotation_Mod));
+                    }
+                    else
+                    {
+                        StartCoroutine(Cog.Change_Speed(-Rotation_Mod));
+                    }
+                }
+
+            }
+
+            H_Spark_Controler.Spark_Intensity = Rotation_Mod / 10;
+
+            foreach (var Cog in Enemy_Interface_Cogs)
+            {
+                if (Cog.Reversed_Spin == false)
+                {
+                    Cog.Target_Spin_Mod = Rotation_Mod;
+                }
+                else
+                {
+                    Cog.Target_Spin_Mod = -Rotation_Mod;
+                }
+
+                if (Cog.Changing_Speed == false)
+                {
+                    if (Cog.Reversed_Spin == false)
+                    {
+                        StartCoroutine(Cog.Change_Speed(Rotation_Mod));
+                    }
+                    else
+                    {
+                        StartCoroutine(Cog.Change_Speed(-Rotation_Mod));
+                    }
+                }
+            }
+
+            E_Spark_Controler.Spark_Intensity = Rotation_Mod / 10;
+
+            Steam_Control(Value);
+
+            Saved_Value = Value;
+        }
+
+    }
